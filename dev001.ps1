@@ -48,6 +48,7 @@ Write-Host "Entity name          :" $entityName
 Write-Host "Google workspace OU  :" $entityGoogleBaseOu
 Write-host "-------------------------------------`n"
 
+clear-content -Path $tempcsv
 Invoke-Expression "$GamDir\gam.exe $gamParams" | out-file -FilePath $tempcsv -ErrorAction Continue #get all chromeOS devices from google workspace
 
 $GsuiteChromeDevices = @()
