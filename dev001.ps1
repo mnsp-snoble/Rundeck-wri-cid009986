@@ -27,6 +27,8 @@ $SearchResult = Invoke-RestMethod "$AppURL/search/Computer$SearchResultApi" -Hea
 $uuids=@()
 $uuids = $SearchResult.data.1 # create uuids array from api returned results
 
+$SearchResult.data
+
 #discovered glpi devices:
 $uuids.count
 
