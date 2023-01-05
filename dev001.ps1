@@ -1,38 +1,194 @@
+$GlobalGamBaseOU = "/ZZ Chrome Devices/" # MNSP root base OU
+
+#$gamOU = "/ZZ Chrome Devices/Buckler's Mead" #BMA
+
+Write-Host $(Get-Date)
+$ErrorActionPreference="Continue"
+Set-Location $GamDir
+Invoke-Expression "$GamDir\gam.exe info domain" 
+
+#create api session to glpi instance...
+$SessionToken = Invoke-RestMethod -Verbose "$AppURL/initSession" -Method Get -Headers @{"Content-Type" = "application/json";"Authorization" = "user_token $UserToken";"App-Token"=$AppToken}
+#https://www.urldecoder.org/
+
+#get all entities from GLPI
+$EntityResult = @() #empty array
+
+#limit entity result to one ID:5 BCL - development - BeechenCliff/Writhlington (ID:1)
+$EntityResult = Invoke-RestMethod "$AppURL/search/Entity?is_deleted=0&as_map=&range=0-10000000&criteria[1][link]=AND&criteria[1][field]=2&criteria[1][searchtype]=contains&criteria[1][value]=1&search=Search&itemtype=Entity&start=0" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
+
+#All entities: - Production
+#$EntityResult = Invoke-RestMethod "$AppURL/search/Entity?is_deleted=0&as_map=0&range=0-1000000&criteria[0][link]=AND&criteria[0][field]=1&criteria[0][searchtype]=notequals&criteria[0][value]=0&search=Search&itemtype=Entity&start=0" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
+$entities = $EntityResult.data #convert api search into entities array
+
+$SearchResult=@()
+#type 14 only
+#$SearchResult = Invoke-RestMethod "$AppURL/search/Computer?is_deleted=0&as_map=0&range=0-100000000&criteria[0][link]=AND&criteria[0][field]=4&criteria[0][searchtype]=equals&criteria[0][value]=14&search=Search&itemtype=Computer&start=0" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
+
+#glpi device types 14 and 15 : chromebooks and chromeflexos
+$SearchResult = Invoke-RestMethod "$AppURL/search/Computer?is_deleted=0&as_map=0&range=0-100000000&browse=0&criteria[0][link]=AND&criteria[0][field]=4&criteria[0][searchtype]=equals&criteria[0][value]=14&criteria[1][link]=OR&criteria[1][field]=4&criteria[1][searchtype]=equals&criteria[1][value]=15&itemtype=Computer&start=0" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
+
+$uuids=@()
+$uuids = $SearchResult.data.1 # create uuids array from api returned results
+#$SearchResult.data | Out-File -FilePath D:\temp\uuids-complete.txt
+
+#discovered glpi devices:
+$uuids.count
 
 
-Write-Host "Hello..."
-Write-Host "email from rundeck vault    :" $email
-Write-Host "Api key from rundeck vault  :" $GLPIapiAppToken
-Write-Host "Api user from rundeck vault :" $GLPIuserApiToken
-Write-Host "GitHub Uri                  :" $GitHubUri
+foreach ( $entity in $entities ) {
 
-$gamOU = "/ZZ Chrome Devices/Writhlington Secondary" #writhlington MNSP instance
+$entityID = $entity.2
+$entityName = $entity.14
+$entityGoogleBaseOu = $entity.76673
+$gamOU = "$GlobalGamBaseOU$entityGoogleBaseOu" #complete entity base ou
 $gamParams = "cros_ou_and_children ""$gamOu"" print cros fields serialNumber,annotatedAssetId,ou,annotatedLocation,ethernetMacAddress,firmwareVersion,lastEnrollmentTime,lastSync,macAddress,model,notes,osVersion,status,meid,autoUpdateExpiration"
 
-Invoke-Expression "$GamDir\gam.exe info domain" 
+
+#
+Write-host "-------------------------------------`n"
+Write-Host "Processing entitiyID :" $entityID
+Write-Host "Entity name          :" $entityName
+Write-Host "Google workspace OU  :" $entityGoogleBaseOu
+Write-host "-------------------------------------`n"
+
+
+
 Invoke-Expression "$GamDir\gam.exe $gamParams" | out-file -FilePath $tempcsv -ErrorAction Continue #get all chromeOS devices from google workspace
 
 $GsuiteChromeDevices = @()
 $GsuiteChromeDevices = Import-Csv -Path $tempcsv #create array of all found Gsuite chrome devices
 $GsuiteChromeDevices.Count
 
-$SessionToken = Invoke-RestMethod -Verbose "$AppURL/initSession" -Method Get -Headers @{"Content-Type" = "application/json";"Authorization" = "user_token $UserToken";"App-Token"=$AppToken}
-#https://www.urldecoder.org/
-
-$SearchResultApi="?is_deleted=0&as_map=0&range=0-100000000&browse=0&criteria[0][link]=AND&criteria[0][field]=4&criteria[0][searchtype]=equals&criteria[0][value]=14&criteria[1][link]=OR&criteria[1][field]=4&criteria[1][searchtype]=equals&criteria[1][value]=15&itemtype=Computer&start=0"
-$SearchResult=@()
-#glpi device types 14 and 15 : chromebooks and chromeflexos
-$SearchResult = Invoke-RestMethod "$AppURL/search/Computer$SearchResultApi" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
-
-$uuids=@()
-$uuids = $SearchResult.data.1 # create uuids array from api returned results
-
-$SearchResult.data
-
-#discovered glpi devices:
-$uuids.count
+Write-warning "sleeping after updatting csv... "
+#sleep 2
 
 
+
+#$Entities = $EntityResult.data.76673 #convert api search into entities array
+
+
+
+Write-host "-------------------------------------------`n"
+
+#compare google data and current glpi data creating/updating as necessary...
+foreach ($ChDevice in $GsuiteChromeDevices ) {
+$uuid = @() #reset uuid var
+$manufacturers_id = @() #reset manufacturers_id var
+$type = @() #reset device type var
+Write-Host "------------------------------------"
+$uuid = $($ChDevice.deviceId) #set uuid from imported google data
+$Computer = $($ChDevice.deviceId)
+$serial = $($ChDevice.SerialNumber)
+$uuid = $($ChDevice.deviceId)
+$DeviceType = $($ChDevice.model)
+    if ($DeviceType -like "*Chromebook*" ) {
+    $type = "14" } else { $type = "15" }
+
+    $manufacturers_id = "1037" #failsafe unknown
+    $manufacturers_id_name = $($ChDevice.model.split(" "))[0] #set manufacturer_id_name by splitting at first word  "Dell Chromebook 3100" becomes "Dell"
+        if ( $manufacturers_id_name -ilike "*Dell*" ) { $manufacturers_id = "3"}
+        if ( $manufacturers_id_name -ilike "*Hewlett*" ) { $manufacturers_id = "97"}
+        if ( $manufacturers_id_name -ilike "*HP*" ) { $manufacturers_id = "2"}
+        if ( $manufacturers_id_name -ilike "*Apple*" ) { $manufacturers_id = "1"}
+        if ( $manufacturers_id_name -ilike "*Asus*" ) { $manufacturers_id = "300"}
+        if ( $manufacturers_id_name -ilike "*Lenovo*" ) { $manufacturers_id = "251"}
+        if ( $manufacturers_id_name -ilike "*Acer*" ) { $manufacturers_id = "458"}
+        if ( $manufacturers_id_name -ilike "*Samsung*" ) { $manufacturers_id = "7"}
+        if ( $manufacturers_id_name -ilike "*GEO*" ) { $manufacturers_id = "1038"} #manually created id
+         
+         
+
+    $otherserial = $($ChDevice.annotatedAssetId) #asset number
+    $computermodels_id = $($ChDevice.model.Split('(')[0]) #not currently splitting as expected or setting manufacturer
+    #$entities_id = "1" #1 = writhlington - hard coded needs to be dynamic from 1st child OU from gsuite
+    #$entities_id = "27" #1 = Bucklers Mead  - hard coded needs to be dynamic from 1st child OU from gsuite
+    $entities_id = $entityID
+    $operatingsystems_id = "4" #despite correct ID is not associating?
+    #$comments = $($ChDevice.orgUnitPath) #update comments field with current google OU path
+    $statusid = "1" #set status to active - needs to be google dynamic; provisioned, deprovisioned etc
+    $eolhwswsupportfield=$($ChDevice.autoUpdateExpiration)
+    $googleworkspaceoufield=$($ChDevice.orgUnitPath)
+    $comments = $($ChDevice.notes)
+    
+    #        computermodels_id=$computermodels_id
+    #        manufacturers_id=$manufacturers_id
+    #        operatingsystems_id=$operatingsystems_id
+
+
+#Write-host "Searching GLPI for chrome device by serial number:" $($ChDevice.SerialNumber)
+Write-host "Searching GLPI for chrome device by UUID:" $uuid
+Write-Host "Manufacturer :" $manufacturers_id
+Write-Host "Model : $DeviceType"
+
+
+if ($uuids.Contains($uuid)) { # check if uuid is already known, if no jump to create else update existing device by id...
+
+ Write-Host "Updating existing device by uuid: $Computer"
+
+        #get device database id using uuid:
+        $ComputerDeviceID = $($ChDevice.deviceId)
+        $SearchResultComputer=@()
+        $SearchResultComputer = Invoke-RestMethod "$AppURL/search/Computer?is_deleted=0&as_map=0&browse=0&criteria[0][link]=AND&criteria[0][field]=1&criteria[0][searchtype]=contains&criteria[0][value]=$ComputerDeviceID&itemtype=Computer&start=0" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
+        $id=$searchResultComputer.data.2
+
+               #create json content of values to update/set...
+               $UpdateData = @{input=@{
+               id=$id
+               computertypes_id=$type
+               status=$statusid
+               otherserial=$otherserial
+               manufacturers_id=$manufacturers_id
+               eolhwswsupportfield=$eolhwswsupportfield
+               googleworkspaceoufield=$googleworkspaceoufield
+               comment=$comments
+               }
+               #operatingsystems_id=$operatingsystems_id
+               #
+            }
+            
+            #$users_id=$users_id
+            #$id = "3971"
+            #$statusid = "1"
+            #$users_id = "2372"
+            #operatingsystems_id=$operatingsystems_id
+            
+            #update device by id using json content set earlier...
+            $jsonupdate = $updateData | ConvertTo-Json
+            $UpdateResult = Invoke-RestMethod "$AppURL/Computer" -Method Put -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"} -Body $jsonUpdate -ContentType 'application/json'
+            $updateResult
+            $jsonupdate
+
+            #>
+            Write-Host "----------------------------`n"
+        
+        }else{
+
+    Write-warning "Missing device by uuid: $($ChDevice.uuid)"
+    Write-Host "Creating new ChromeOS device..."
+     
+    $Data = @{input=@{
+        name=$Computer
+        computertypes_id=$type
+        uuid=$uuid
+        otherserial=$otherserial
+        entities_id=$entities_id
+        serial=$Serial}
+    }
+
+    $json = $Data | ConvertTo-Json
+    $json
+    $AddResult = Invoke-RestMethod "$AppURL/Computer" -Method Post -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"} -Body $json -ContentType 'application/json'
+    Write-Host "GLPI - Computer created" -ForegroundColor Green
+    $AddResult
+    #sleep 20
+    Write-Host "----------------------------`n"
+    }
+}
+Write-Warning "sleeping before next entity...."
+#Sleep 2
+
+}
 
 #close api session...
 Invoke-RestMethod "$AppURL/killSession" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
