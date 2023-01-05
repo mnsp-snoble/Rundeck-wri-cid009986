@@ -1,7 +1,5 @@
 $GlobalGamBaseOU = "/ZZ Chrome Devices/" # MNSP root base OU
 
-#$gamOU = "/ZZ Chrome Devices/Buckler's Mead" #BMA
-
 Write-Host $(Get-Date)
 $ErrorActionPreference="Continue"
 Set-Location $GamDir
@@ -30,9 +28,8 @@ $SearchResult = Invoke-RestMethod "$AppURL/search/Computer?is_deleted=0&as_map=0
 
 $uuids=@()
 $uuids = $SearchResult.data.1 # create uuids array from api returned results
-#$SearchResult.data | Out-File -FilePath D:\temp\uuids-complete.txt
 
-#discovered glpi devices:
+#discovered devices:
 $uuids.count
 
 
@@ -44,15 +41,12 @@ $entityGoogleBaseOu = $entity.76673
 $gamOU = "$GlobalGamBaseOU$entityGoogleBaseOu" #complete entity base ou
 $gamParams = "cros_ou_and_children ""$gamOu"" print cros fields serialNumber,annotatedAssetId,ou,annotatedLocation,ethernetMacAddress,firmwareVersion,lastEnrollmentTime,lastSync,macAddress,model,notes,osVersion,status,meid,autoUpdateExpiration"
 
-
 #
 Write-host "-------------------------------------`n"
 Write-Host "Processing entitiyID :" $entityID
 Write-Host "Entity name          :" $entityName
 Write-Host "Google workspace OU  :" $entityGoogleBaseOu
 Write-host "-------------------------------------`n"
-
-
 
 Invoke-Expression "$GamDir\gam.exe $gamParams" | out-file -FilePath $tempcsv -ErrorAction Continue #get all chromeOS devices from google workspace
 
@@ -61,13 +55,6 @@ $GsuiteChromeDevices = Import-Csv -Path $tempcsv #create array of all found Gsui
 $GsuiteChromeDevices.Count
 
 Write-warning "sleeping after updatting csv... "
-#sleep 2
-
-
-
-#$Entities = $EntityResult.data.76673 #convert api search into entities array
-
-
 
 Write-host "-------------------------------------------`n"
 
@@ -95,17 +82,14 @@ $DeviceType = $($ChDevice.model)
         if ( $manufacturers_id_name -ilike "*Lenovo*" ) { $manufacturers_id = "251"}
         if ( $manufacturers_id_name -ilike "*Acer*" ) { $manufacturers_id = "458"}
         if ( $manufacturers_id_name -ilike "*Samsung*" ) { $manufacturers_id = "7"}
-        if ( $manufacturers_id_name -ilike "*GEO*" ) { $manufacturers_id = "1038"} #manually created id
+        if ( $manufacturers_id_name -ilike "*GEO*" ) { $manufacturers_id = "1038"} #manually created id       
          
-         
-
     $otherserial = $($ChDevice.annotatedAssetId) #asset number
     $computermodels_id = $($ChDevice.model.Split('(')[0]) #not currently splitting as expected or setting manufacturer
-    #$entities_id = "1" #1 = writhlington - hard coded needs to be dynamic from 1st child OU from gsuite
-    #$entities_id = "27" #1 = Bucklers Mead  - hard coded needs to be dynamic from 1st child OU from gsuite
+
     $entities_id = $entityID
     $operatingsystems_id = "4" #despite correct ID is not associating?
-    #$comments = $($ChDevice.orgUnitPath) #update comments field with current google OU path
+
     $statusid = "1" #set status to active - needs to be google dynamic; provisioned, deprovisioned etc
     $eolhwswsupportfield=$($ChDevice.autoUpdateExpiration)
     $googleworkspaceoufield=$($ChDevice.orgUnitPath)
@@ -146,13 +130,7 @@ if ($uuids.Contains($uuid)) { # check if uuid is already known, if no jump to cr
                #operatingsystems_id=$operatingsystems_id
                #
             }
-            
-            #$users_id=$users_id
-            #$id = "3971"
-            #$statusid = "1"
-            #$users_id = "2372"
-            #operatingsystems_id=$operatingsystems_id
-            
+                      
             #update device by id using json content set earlier...
             $jsonupdate = $updateData | ConvertTo-Json
             $UpdateResult = Invoke-RestMethod "$AppURL/Computer" -Method Put -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"} -Body $jsonUpdate -ContentType 'application/json'
@@ -181,12 +159,10 @@ if ($uuids.Contains($uuid)) { # check if uuid is already known, if no jump to cr
     $AddResult = Invoke-RestMethod "$AppURL/Computer" -Method Post -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"} -Body $json -ContentType 'application/json'
     Write-Host "GLPI - Computer created" -ForegroundColor Green
     $AddResult
-    #sleep 20
     Write-Host "----------------------------`n"
     }
 }
 Write-Warning "sleeping before next entity...."
-#Sleep 2
 
 }
 
