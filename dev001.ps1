@@ -3,6 +3,8 @@ $GlobalGamBaseOU = "/ZZ Chrome Devices/" # MNSP root base OU
 Write-Host $(Get-Date)
 $ErrorActionPreference="Continue"
 Set-Location $GamDir
+
+#Get/Confirm Google instance
 Invoke-Expression "$GamDir\gam.exe info domain" 
 
 #create api session to glpi instance...
