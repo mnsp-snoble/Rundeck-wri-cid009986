@@ -89,7 +89,8 @@ $DeviceType = $($ChDevice.model)
         if ( $manufacturers_id_name -ilike "*Lenovo*" ) { $manufacturers_id = "251"}
         if ( $manufacturers_id_name -ilike "*Acer*" ) { $manufacturers_id = "458"}
         if ( $manufacturers_id_name -ilike "*Samsung*" ) { $manufacturers_id = "7"}
-        if ( $manufacturers_id_name -ilike "*GEO*" ) { $manufacturers_id = "1038"} #manually created id       
+        if ( $manufacturers_id_name -ilike "*GEO*" ) { $manufacturers_id = "1038"} #manually created id
+        if ( $manufacturers_id_name -ilike "*Dynabook*" ) { $manufacturers_id = "1039"} #manually created id 
          
     $otherserial = $($ChDevice.annotatedAssetId) #asset number
     $computermodels_id = $($ChDevice.model.Split('(')[0]) #not currently splitting as expected or setting manufacturer
