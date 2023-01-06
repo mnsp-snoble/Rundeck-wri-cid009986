@@ -37,8 +37,8 @@ foreach ( $entity in $entities ) {
 
 $entityID = $entity.2
 $entityName = $entity.14
-$entityGoogleBaseOu = $entity.76673
-$entityUpdateChromeUserGsuite = $entity.76674
+$entityGoogleBaseOu = $entity.76673 #gsuite ou of device
+$entityUpdateChromeUserGsuite = $entity.76674 # yes/no toggle from entity - returns 0 or 1
 $gamOU = "$GlobalGamBaseOU$entityGoogleBaseOu" #complete entity base ou
 $gamParams = "cros_ou_and_children ""$gamOu"" print cros fields serialNumber,annotatedAssetId,ou,annotatedLocation,ethernetMacAddress,firmwareVersion,lastEnrollmentTime,lastSync,macAddress,model,notes,osVersion,status,meid,autoUpdateExpiration"
 
