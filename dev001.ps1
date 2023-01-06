@@ -63,6 +63,7 @@ Write-host "-------------------------------------------`n"
 
 #compare google data and current glpi data creating/updating as necessary...
 foreach ($ChDevice in $GsuiteChromeDevices ) {
+$ChDevice #dump curent content...    
 $uuid = @() #reset uuid var
 $manufacturers_id = @() #reset manufacturers_id var
 $type = @() #reset device type var
@@ -71,6 +72,7 @@ $uuid = $($ChDevice.deviceId) #set uuid from imported google data
 $Computer = $($ChDevice.deviceId)
 $serial = $($ChDevice.SerialNumber)
 $uuid = $($ChDevice.deviceId)
+$googleworkspaceAnotatedUser = $($ChDevice.users_id)
 $DeviceType = $($ChDevice.model)
     if ($DeviceType -like "*Chromebook*" ) {
     $type = "14" } else { $type = "15" }
@@ -97,7 +99,6 @@ $DeviceType = $($ChDevice.model)
     $eolhwswsupportfield=$($ChDevice.autoUpdateExpiration)
     $googleworkspaceoufield=$($ChDevice.orgUnitPath)
     $comments = $($ChDevice.notes)
-    $googleworkspaceAnotatedUser = $($ChDevice.users_id)
     
     #        computermodels_id=$computermodels_id
     #        manufacturers_id=$manufacturers_id
@@ -167,7 +168,7 @@ if ($uuids.Contains($uuid)) { # check if uuid is already known, if no jump to cr
     }
     #update current Chrome device in google instance user (email), using entity yes/no toggle...
     if ($entityUpdateChromeUserGsuite -eq "1") {
-        Write-Host "Updating current Google workspace chrome device uuid: $uuid with email: $googleworkspaceAnotatedUser attribute from GLPI"
+        #Write-Host "Updating current Google workspace chrome device uuid: $uuid with email: $googleworkspaceAnotatedUser attribute from GLPI"
         #set annotated Values using gamxtd3...
         Write-Host "gam update cros $uuid annotatedUser $googleworkspaceAnotatedUser"
 
