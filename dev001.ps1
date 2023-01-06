@@ -38,6 +38,7 @@ foreach ( $entity in $entities ) {
 $entityID = $entity.2
 $entityName = $entity.14
 $entityGoogleBaseOu = $entity.76673
+$entityUpdateChromeUserGsuite = $entity.76674
 $gamOU = "$GlobalGamBaseOU$entityGoogleBaseOu" #complete entity base ou
 $gamParams = "cros_ou_and_children ""$gamOu"" print cros fields serialNumber,annotatedAssetId,ou,annotatedLocation,ethernetMacAddress,firmwareVersion,lastEnrollmentTime,lastSync,macAddress,model,notes,osVersion,status,meid,autoUpdateExpiration"
 
@@ -96,6 +97,7 @@ $DeviceType = $($ChDevice.model)
     $eolhwswsupportfield=$($ChDevice.autoUpdateExpiration)
     $googleworkspaceoufield=$($ChDevice.orgUnitPath)
     $comments = $($ChDevice.notes)
+    $googleworkspaceAnotatedUser = $($ChDevice.users_id)
     
     #        computermodels_id=$computermodels_id
     #        manufacturers_id=$manufacturers_id
@@ -162,6 +164,13 @@ if ($uuids.Contains($uuid)) { # check if uuid is already known, if no jump to cr
     Write-Host "GLPI - Computer created" -ForegroundColor Green
     $AddResult
     Write-Host "----------------------------`n"
+    }
+    #update current Chrome device in google instance user (email), using entity yes/no toggle...
+    if ($entityUpdateChromeUserGsuite -eq "1") {
+        Write-Host "Updating current Google workspace chrome device uuid: $($ChDevice.uuid) with email: $($googleworkspaceAnotatedUser) attribute from GLPI"
+        #set annotated Values using gamxtd3...
+        Write-Host "gam update cros $($ChDevice.uuid) annotatedUser $($googleworkspaceAnotatedUser)"
+
     }
 }
 Write-Warning "sleeping before next entity...."
