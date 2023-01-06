@@ -63,7 +63,7 @@ Write-host "-------------------------------------------`n"
 
 #compare google data and current glpi data creating/updating as necessary...
 foreach ($ChDevice in $GsuiteChromeDevices ) {
-$ChDevice #dump curent content...    
+#$ChDevice #dump curent content...    
 $uuid = @() #reset uuid var
 $manufacturers_id = @() #reset manufacturers_id var
 $type = @() #reset device type var
@@ -72,7 +72,7 @@ $uuid = $($ChDevice.deviceId) #set uuid from imported google data
 $Computer = $($ChDevice.deviceId)
 $serial = $($ChDevice.SerialNumber)
 $uuid = $($ChDevice.deviceId)
-$googleworkspaceAnotatedUser = $($ChDevice.users_id)
+
 $DeviceType = $($ChDevice.model)
     if ($DeviceType -like "*Chromebook*" ) {
     $type = "14" } else { $type = "15" }
@@ -120,6 +120,7 @@ if ($uuids.Contains($uuid)) { # check if uuid is already known, if no jump to cr
         $SearchResultComputer=@()
         $SearchResultComputer = Invoke-RestMethod "$AppURL/search/Computer?is_deleted=0&as_map=0&browse=0&criteria[0][link]=AND&criteria[0][field]=1&criteria[0][searchtype]=contains&criteria[0][value]=$ComputerDeviceID&itemtype=Computer&start=0" -Headers @{"session-token"=$SessionToken.session_token; "App-Token" = "$AppToken"}
         $id=$searchResultComputer.data.2
+        $searchResultComputer.data #dump api search result
 
                #create json content of values to update/set...
                $UpdateData = @{input=@{
