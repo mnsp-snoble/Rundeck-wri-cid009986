@@ -79,7 +79,7 @@ $DeviceType = $($ChDevice.model)
     if ($DeviceType -like "*Chromebook*" ) {
     $type = "14" } else { $type = "15" }
 
-    $manufacturers_id = "1037" #failsafe unknown
+    $manufacturers_id = "1037" #failsafe unknown -1146 (PROD)
     $manufacturers_id_name = $($ChDevice.model.split(" "))[0] #set manufacturer_id_name by splitting at first word  "Dell Chromebook 3100" becomes "Dell"
         if ( $manufacturers_id_name -ilike "*Dell*" ) { $manufacturers_id = "3"}
         if ( $manufacturers_id_name -ilike "*Hewlett*" ) { $manufacturers_id = "97"}
@@ -89,8 +89,8 @@ $DeviceType = $($ChDevice.model)
         if ( $manufacturers_id_name -ilike "*Lenovo*" ) { $manufacturers_id = "251"}
         if ( $manufacturers_id_name -ilike "*Acer*" ) { $manufacturers_id = "458"}
         if ( $manufacturers_id_name -ilike "*Samsung*" ) { $manufacturers_id = "7"}
-        if ( $manufacturers_id_name -ilike "*GEO*" ) { $manufacturers_id = "1038"} #manually created id
-        if ( $manufacturers_id_name -ilike "*Dynabook*" ) { $manufacturers_id = "1039"} #manually created id 
+        if ( $manufacturers_id_name -ilike "*GEO*" ) { $manufacturers_id = "1038"} #manually created id - 835 (PROD)
+        if ( $manufacturers_id_name -ilike "*Dynabook*" ) { $manufacturers_id = "1039"} #manually created id -1147 (PROD)
          
     $otherserial = $($ChDevice.annotatedAssetId) #asset number
     $computermodels_id = $($ChDevice.model.Split('(')[0]) #not currently splitting as expected or setting manufacturer
