@@ -39,8 +39,8 @@ foreach ( $entity in $entities ) {
 
 $entityID = $entity.2
 $entityName = $entity.14
-$entityGoogleBaseOu = $entity.76673 #gsuite ou of device
-$entityUpdateChromeUserGsuite = $entity.76674 # yes/no toggle from entity - returns 0 or 1
+$entityGoogleBaseOu = $entity.76673 #gsuite ou of device - 76673 (PROD)
+$entityUpdateChromeUserGsuite = $entity.76674 # yes/no toggle from entity - returns 0 or 1 - 76674 (PROD)
 $gamOU = "$GlobalGamBaseOU$entityGoogleBaseOu" #complete entity base ou
 $gamParams = "cros_ou_and_children ""$gamOu"" print cros fields serialNumber,annotatedAssetId,ou,annotatedLocation,ethernetMacAddress,firmwareVersion,lastEnrollmentTime,lastSync,macAddress,model,notes,osVersion,status,meid,autoUpdateExpiration"
 
@@ -96,7 +96,7 @@ $DeviceType = $($ChDevice.model)
     $computermodels_id = $($ChDevice.model.Split('(')[0]) #not currently splitting as expected or setting manufacturer
 
     $entities_id = $entityID
-    $operatingsystems_id = "4" #despite correct ID is not associating?
+    $operatingsystems_id = "4" #despite correct ID it is not currently associating?
 
     $statusid = "1" #set status to active - needs to be google dynamic; provisioned, deprovisioned etc
     $eolhwswsupportfield=$($ChDevice.autoUpdateExpiration)
