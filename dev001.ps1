@@ -102,6 +102,8 @@ $DeviceType = $($ChDevice.model)
     $statusid = "11" #failsafe unspecified
     if ( $ChDevice.status -like "*Active*" ) { $statusid = "9"} #manually created google workspace status
     if ( $ChDevice.status -like "*Disabled*" ) { $statusid = "10"} #manually created google workspace status
+    if ( $ChDevice.status -like "*Deprovisioned*" ) { $statusid = "13"} #manually created google workspace status
+
 
     $eolhwswsupportfield=$($ChDevice.autoUpdateExpiration)
     $googleworkspaceoufield=$($ChDevice.orgUnitPath)
