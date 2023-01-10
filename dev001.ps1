@@ -133,7 +133,7 @@ if ($uuids.Contains($uuid)) { # check if uuid is already known, if no jump to cr
                $UpdateData = @{input=@{
                id=$id
                computertypes_id=$type
-               status=$statusid
+               states_id=$statusid
                otherserial=$otherserial
                manufacturers_id=$manufacturers_id
                eolhwswsupportfield=$eolhwswsupportfield
