@@ -98,7 +98,11 @@ $DeviceType = $($ChDevice.model)
     $entities_id = $entityID
     $operatingsystems_id = "4" #despite correct ID it is not currently associating?
 
-    $statusid = "1" #set status to active - needs to be google dynamic; provisioned, deprovisioned etc
+    #$statusid = "1" #set status to active - needs to be google dynamic; active, disabled, provisioned, deprovisioned etc
+    $statusid = "11" #failsafe unspecified
+    if ( $ChDevice.status -like "*Active*" ) { $statusid = "9"} #manually created google workspace status
+    if ( $ChDevice.status -like "*Disabled*" ) { $statusid = "10"} #manually created google workspace status
+
     $eolhwswsupportfield=$($ChDevice.autoUpdateExpiration)
     $googleworkspaceoufield=$($ChDevice.orgUnitPath)
     $comments = $($ChDevice.notes)
